@@ -1,11 +1,12 @@
 {
   "name": "transl8",
   "displayName": "Transl8",
-  "description": "Extension to manage translation inline",
-  "version": "0.0.1",
+  "description": "Manage translations directly within your code editor.",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.103.0"
   },
+  "icon": "images/icon.png",
   "categories": [
     "Other"
   ],
