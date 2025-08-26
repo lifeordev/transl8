@@ -78,4 +78,4 @@ Found a bug or have a feature request? Please open an issue on our [GitHub repos
 
 ## License
 
-This extension is licensed under the [MIT License](https://github.com/lifeordev/transl8/blob/main/LICENSE).
+This extension is licensed under the [MIT License](https://github.com/lifeordev/transl8/blob/master/LICENSE).
