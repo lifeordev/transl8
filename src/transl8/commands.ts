@@ -34,6 +34,16 @@ export function registerEditTranslationCommand(
             translationFilePath
           );
 
+      // Check if key is a substring prefix of another key
+      for (const existingKey of translations.keys()) {
+        if (existingKey !== key && existingKey.startsWith(key + ".")) {
+          vscode.window.showWarningMessage(
+            `Cannot edit "${key}" because a more specific key "${existingKey}" exists.`
+          );
+          return;
+        }
+      }
+
       // 2. Get user input
       const currentValue = translations.get(key) || [""];
 

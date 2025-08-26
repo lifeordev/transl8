@@ -21,9 +21,8 @@ export function registerHoverProvider(
           return undefined;
         }
 
-        // 1. Create a dynamic regex from the configured function names
         const functionNamesRegexPart = targetFunctionNames
-          .map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")) // Escape special regex characters
+          .map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
           .join("|");
         const keyRegex = new RegExp(
           `(?:${functionNamesRegexPart})\\s*\\(\\s*['"]([^'"]+)['"]\\s*\\)`,
@@ -32,16 +31,24 @@ export function registerHoverProvider(
 
         const lineText = document.lineAt(position.line).text;
 
-        // 2. Find all matches on the current line
         let match;
         while ((match = keyRegex.exec(lineText)) !== null) {
           const key = match[1];
-          // Calculate the precise start and end of the key within the quotes
           const start = match.index + match[0].indexOf(key);
           const end = start + key.length;
 
-          // 3. Check if the hover position is within the bounds of a matched key
           if (position.character >= start && position.character <= end) {
+            // Check if key is a substring prefix of another key
+            for (const existingKey of translations.keys()) {
+              if (existingKey !== key && existingKey.startsWith(key + ".")) {
+                const warning = new vscode.MarkdownString(
+                  `$(warning) **Cannot show translation for "${key}" because a more specific key "${existingKey}" exists.**\n\nPlease edit or remove the more specific key first.`
+                );
+                warning.isTrusted = true;
+                return new vscode.Hover(warning);
+              }
+            }
+
             const translationData = translations.get(key);
 
             // 4. Create the command URI
