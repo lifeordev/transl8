@@ -2,7 +2,7 @@
   "name": "transl8",
   "displayName": "Transl8",
   "description": "Manage translations directly within your code editor.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "engines": {
     "vscode": "^1.103.0"
   },
@@ -66,7 +66,7 @@
         "owner": "esbuild",
         "fileLocation": [
           "relative",
-          "${workspaceFolder}"
+          "${workspaceFolder:folderName}"
         ],
         "pattern": {
           "regexp": "^\\s+>\\s+(.*):(\\d+):(\\d+):\\s+(error|warning):\\s+(.*)$",
