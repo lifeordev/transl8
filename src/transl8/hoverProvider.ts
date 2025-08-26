@@ -55,25 +55,14 @@ export function registerHoverProvider(
             const markdownString = new vscode.MarkdownString("", true); // Enable markdown parsing
             markdownString.isTrusted = true;
             markdownString.supportThemeIcons = true;
-            markdownString.supportHtml = true;
 
             // Define a minimum width for the hover, in character equivalents.
             const minWidth = 60;
-
             // Calculate the necessary padding to meet the minimum width.
             const paddingNeeded = Math.max(0, minWidth - key.length);
             const minWidthSpacer = "&nbsp;".repeat(paddingNeeded);
 
-            // Use a styled span for the key. Font styling is added for extra safety.
-            const styledKey = `<span style="color:var(--vscode-descriptionForeground); font-weight:normal;">${key}${minWidthSpacer}</span>`;
-
-            markdownString.appendMarkdown(styledKey);
-
-            // IMPORTANT: Add a non-breaking space on a new line.
-            // This prevents the '---' below from turning the key into a giant heading.
-            // markdownString.appendMarkdown("\n\n&nbsp;\n");
-
-            markdownString.appendMarkdown(`\n`);
+            markdownString.appendMarkdown(`${key}${minWidthSpacer}\n`);
 
             if (translationData) {
               const [translation, context] = translationData;
