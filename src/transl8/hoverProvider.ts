@@ -44,40 +44,70 @@ export function registerHoverProvider(
           if (position.character >= start && position.character <= end) {
             const translationData = translations.get(key);
 
-            // 4. Create the command URI to pass the key to the edit command
+            // 4. Create the command URI
             const args = [key];
             const encodedArgs = encodeURIComponent(JSON.stringify(args));
-            const editCommandUri = vscode.Uri.parse(
+            const commandUri = vscode.Uri.parse(
               `command:lifeordev.transl8.editTranslation?${encodedArgs}`
             );
 
             // 5. Build the rich hover content using Markdown
-            const markdownString = new vscode.MarkdownString();
-            markdownString.isTrusted = true; // Allow commands to be executed
+            const markdownString = new vscode.MarkdownString("", true); // Enable markdown parsing
+            markdownString.isTrusted = true;
+            markdownString.supportThemeIcons = true;
+            markdownString.supportHtml = true;
+
+            // Define a minimum width for the hover, in character equivalents.
+            const minWidth = 60;
+
+            // Calculate the necessary padding to meet the minimum width.
+            const paddingNeeded = Math.max(0, minWidth - key.length);
+            const minWidthSpacer = "&nbsp;".repeat(paddingNeeded);
+
+            // Use a styled span for the key. Font styling is added for extra safety.
+            const styledKey = `<span style="color:var(--vscode-descriptionForeground); font-weight:normal;">${key}${minWidthSpacer}</span>`;
+
+            markdownString.appendMarkdown(styledKey);
+
+            // IMPORTANT: Add a non-breaking space on a new line.
+            // This prevents the '---' below from turning the key into a giant heading.
+            // markdownString.appendMarkdown("\n\n&nbsp;\n");
+
+            markdownString.appendMarkdown(`\n`);
 
             if (translationData) {
               const [translation, context] = translationData;
+
+              // Build the table for value and context
+              const table = `
+| | |
+|:---|:---|
+| **Value** | ${translation} |
+| **Context** | ${context ?? "_No comment provided._"} |
+`;
+              markdownString.appendMarkdown(table);
+
+              // Action link
+              markdownString.appendMarkdown(`\n---\n`);
               markdownString.appendMarkdown(
-                `**Transl8** &nbsp; [✏️ Edit](${editCommandUri})\n\n`
-              );
-              markdownString.appendMarkdown(`*Key:* \`${key}\`\n\n`);
-              markdownString.appendCodeblock(translation, "plaintext");
-              markdownString.appendMarkdown(
-                `\n\n*Context:* ${context ?? "_No comment provided._"}`
+                `[$(edit) Edit Translation](${commandUri})`
               );
             } else {
+              // Updated message for a missing key (key itself is omitted)
               markdownString.appendMarkdown(
-                `**Transl8** &nbsp; [✏️ Add Translation](${editCommandUri})\n\n`
+                `$(info) No translation found for this key.\n`
               );
+
+              // Action link
+              markdownString.appendMarkdown(`\n---\n`);
               markdownString.appendMarkdown(
-                `No translation found for key: \`${key}\``
+                `[$(add) Add Translation](${commandUri})`
               );
             }
 
             return new vscode.Hover(markdownString);
           }
         }
-
         return undefined; // No key found at this position
       },
     }
