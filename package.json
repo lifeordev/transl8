@@ -6,10 +6,15 @@
   "engines": {
     "vscode": "^1.103.0"
   },
+  "publisher": "lifeordev",
   "icon": "images/icon.png",
   "categories": [
     "Other"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lifeordev/transl8"
+  },
   "activationEvents": [
     "onLanguage:javascript",
     "onLanguage:typescript",
