@@ -1,17 +1,14 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 
-/**
- * The in-memory store for all translation key/value pairs.
- * This is exported so other modules can read from it.
- */
-export const translations: Map<string, [string, string?]> = new Map();
+// Cache to store translations and file modification times to avoid unnecessary file reads.
+const translationCache = new Map<
+  string,
+  { mtime: number; translations: Map<string, [string, string?]> }
+>();
 
 /**
  * Recursively flattens a nested object into a Map with dot-notation keys.
- * @param obj The object to flatten.
- * @param prefix The prefix to use for the keys.
- * @returns A flat Map of translation keys to their values.
  */
 function flattenObjectToMap(
   obj: Record<string, any>,
@@ -20,7 +17,6 @@ function flattenObjectToMap(
   const map = new Map<string, [string, string?]>();
 
   for (const key in obj) {
-    // Ensure the key is an own property of the object
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
       const newPrefix = prefix ? `${prefix}.${key}` : key;
       const value = obj[key];
@@ -30,11 +26,9 @@ function flattenObjectToMap(
         !Array.isArray(value) &&
         value !== null
       ) {
-        // If the value is another object, recurse deeper
         const nestedMap = flattenObjectToMap(value, newPrefix);
         nestedMap.forEach((val, k) => map.set(k, val));
       } else if (Array.isArray(value)) {
-        // This is a valid translation entry
         map.set(newPrefix, value as [string, string?]);
       }
     }
@@ -43,36 +37,47 @@ function flattenObjectToMap(
 }
 
 /**
- * Reads the specified translation file, parses it, and populates the global translations map.
+ * Reads a translation file and returns a map of its contents.
+ * Uses a cache to avoid re-reading unchanged files.
  * @param filePath The absolute path to the JSON translation file.
+ * @returns A Map of translation keys to values, or an empty map if loading fails.
  */
-export function loadTranslations(filePath: string | undefined) {
-  // 1. Clear previous translations to ensure a fresh state
-  translations.clear();
-
-  // 2. Guard against missing file paths or non-existent files
+export function loadTranslations(
+  filePath: string | undefined
+): Map<string, [string, string?]> {
   if (!filePath || !fs.existsSync(filePath)) {
-    return;
+    return new Map();
   }
 
-  // 3. Read and parse the file
   try {
+    const stats = fs.statSync(filePath);
+    const cached = translationCache.get(filePath);
+
+    // If file is cached and modification time hasn't changed, return cached version.
+    if (cached && cached.mtime === stats.mtime.getTime()) {
+      return cached.translations;
+    }
+
     const fileContents = fs.readFileSync(filePath, "utf8");
     const json = JSON.parse(fileContents);
     const flattenedMap = flattenObjectToMap(json);
 
-    // 4. Populate the exported map with the new data
-    flattenedMap.forEach((value, key) => {
-      translations.set(key, value);
+    // Update cache
+    translationCache.set(filePath, {
+      mtime: stats.mtime.getTime(),
+      translations: flattenedMap,
     });
+
     console.log(
-      `Transl8: Successfully loaded ${translations.size} translations.`
+      `Transl8: Successfully loaded/reloaded ${flattenedMap.size} translations from ${filePath}.`
     );
+    return flattenedMap;
   } catch (error) {
     if (error instanceof Error) {
       vscode.window.showErrorMessage(
-        `Transl8: Failed to load translation file. Error: ${error.message}`
+        `Transl8: Failed to load ${filePath}. Error: ${error.message}`
       );
     }
+    return new Map();
   }
 }

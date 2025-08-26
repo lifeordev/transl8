@@ -1,40 +1,27 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
-import * as path from "path";
 import { updateValueInObject } from "./utils";
+import { getConfigForUri } from "./configuration";
+import { loadTranslations } from "./translationManager";
 
-/**
- * Registers the command to edit a translation.
- * @param translations A map holding the current translation key/value pairs.
- */
-export function registerEditTranslationCommand(
-  translations: Map<string, [string, string?]>
-): vscode.Disposable {
+export function registerEditTranslationCommand(): vscode.Disposable {
   return vscode.commands.registerCommand(
     "lifeordev.transl8.editTranslation",
-    async (key: string) => {
-      const configuration =
-        vscode.workspace.getConfiguration("lifeordev.transl8");
-      const translationFilePath = configuration.get<string>(
-        "translationFilePath"
-      );
+    // The command now receives the key and the URI of the document it was triggered from.
+    async (key: string, resourceUriString: string) => {
+      const resourceUri = vscode.Uri.parse(resourceUriString);
+      const config = getConfigForUri(resourceUri);
 
-      // 1. Pre-computation checks
-      if (!translationFilePath || !vscode.workspace.workspaceFolders) {
+      if (!config || !config.absoluteTranslationPath) {
         vscode.window.showErrorMessage(
-          "Transl8: Translation file path not configured."
+          "Transl8: Could not find configuration for the active file."
         );
         return;
       }
+      const absoluteTranslationPath = config.absoluteTranslationPath;
+      const translations = loadTranslations(absoluteTranslationPath);
 
-      const absoluteTranslationPath = path.isAbsolute(translationFilePath)
-        ? translationFilePath
-        : path.join(
-            vscode.workspace.workspaceFolders[0].uri.fsPath,
-            translationFilePath
-          );
-
-      // Check if key is a substring prefix of another key
+      // (The rest of the logic is largely the same, but uses the resolved `absoluteTranslationPath`)
       for (const existingKey of translations.keys()) {
         if (existingKey !== key && existingKey.startsWith(key + ".")) {
           vscode.window.showWarningMessage(
@@ -44,16 +31,13 @@ export function registerEditTranslationCommand(
         }
       }
 
-      // 2. Get user input
       const currentValue = translations.get(key) || [""];
-
       const newValue = await vscode.window.showInputBox({
         prompt: `Edit translation for "${key}"`,
         value: currentValue[0],
         placeHolder: "Enter the new translation",
       });
 
-      // User cancelled the input box
       if (newValue === undefined) {
         return;
       }
@@ -65,14 +49,20 @@ export function registerEditTranslationCommand(
       });
 
       if (newCtx === "") {
-        newCtx = undefined; // Treat empty string as no context
+        newCtx = undefined;
       }
 
-      // 3. Update the file if changes were made
       if (newValue !== currentValue[0] || newCtx !== currentValue[1]) {
         try {
-          const fileContents = fs.readFileSync(absoluteTranslationPath, "utf8");
-          const jsonObject = JSON.parse(fileContents);
+          // Ensure the file exists before trying to read it, create if not.
+          let jsonObject = {};
+          if (fs.existsSync(absoluteTranslationPath)) {
+            const fileContents = fs.readFileSync(
+              absoluteTranslationPath,
+              "utf8"
+            );
+            jsonObject = JSON.parse(fileContents);
+          }
 
           const finalValue: [string, string?] = [newValue, newCtx];
           updateValueInObject(jsonObject, key, finalValue);
