@@ -1,71 +1,81 @@
-# transl8 README
+# Transl8 - i18n Source File Helper
 
-This is the README for your extension "transl8". After writing up a brief description, we recommend including the following sections.
+Transl8 is a powerful VS Code extension designed to streamline your internationalization (i18n) workflow. It helps you efficiently manage your **primary language source file** by providing instant feedback and editing capabilities directly within your code.
 
-## Features
+Stop switching between your code and your JSON files. With Transl8, your source translations are always just a hover away.
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
-
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/lifeordev.transl8?style=flat-square&label=Marketplace)](https://marketplace.visualstudio.com/items?itemName=lifeordev.transl8)
 
 ---
 
-## Following extension guidelines
+## How It Works
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+Transl8 is built to manage a **single source-of-truth** translation file (e.g., `en.json`). It helps you write and maintain the primary text and its context. The process of translating this source file into other languages (e.g., `de.json`, `es.json`) should be handled by a separate tool or workflow outside of this extension.
 
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+### JSON Structure
 
-## Working with Markdown
+The extension expects each translation value to be an array (a tuple) where:
 
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
+1.  The first item is the **translation string**.
+2.  The second item (optional) is a **comment or context** for translators.
 
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
+#### Example JSON Format
 
-## For more information
+```json
+{
+  "warning": {
+    "noUser": [
+      "No Users Found",
+      "Warning message if no users found, keep below 20 chars"
+    ],
+    "noAccess": ["You do not have permission to view this page."]
+  }
+}
+```
 
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+## Features
 
-**Enjoy!**
+- **Instant Hover Previews**: Hover over a translation key to see its value and the context/comment you've provided.
+- **Quick Edit Command**: An "Edit" link in the hover tooltip lets you add or update the source translation and its context on the fly.
+- **Key Autocompletion**: Get intelligent autocomplete suggestions for all your translation keys as soon as you start typing inside your translation function.
+- **Nested JSON Support**: Works seamlessly with nested JSON translation files by flattening keys into dot-notation (e.g., `warning.noUser`).
+
+---
+
+## Configuration
+
+To get started, you need to configure the extension in your workspace `settings.json` file.
+
+Open your settings by going to **File > Preferences > Settings**, then click the "Workspace" tab. Search for "transl8" or edit your `.vscode/settings.json` file directly.
+
+### Available Settings
+
+- `lifeordev.transl8.translationFilePath`: **(Required)** The path to your primary JSON translation file.
+- `lifeordev.transl8.functionNames`: **(Required)** An array of function names that you use for translations (e.g., `t`, `$t`, `translate`).
+- `lifeordev.transl8.sourceCodePath`: **(Optional)** The path to your source code directory. Autocomplete will only activate for files within this path.
+
+### Example `settings.json`
+
+```json
+{
+  "lifeordev.transl8.translationFilePath": "./src/locales/en.json",
+  "lifeordev.transl8.functionNames": ["t", "$t"],
+  "lifeordev.transl8.sourceCodePath": "./src"
+}
+```
+
+## Usage
+
+Once configured, the extension will automatically activate.
+
+1.  **See Translations**: Simply move your mouse over a key used inside one of your configured `functionNames` (e.g., `t('warning.noUser')`). A tooltip will appear with the translation and context.
+2.  **Edit or Add Translations**: Click the "✏️ Edit" or "✏️ Add Translation" link in the tooltip. VS Code will prompt you for the new translation and an optional context comment.
+3.  **Autocomplete Keys**: Inside a translation function, type a quote (`'` or `"`) to trigger autocomplete and see a list of all available keys.
+
+## Contributing
+
+Found a bug or have a feature request? Please open an issue on our [GitHub repository](https://github.com/lifeordev/transl8). Contributions are welcome!
+
+## License
+
+This extension is licensed under the [MIT License](https://github.com/lifeordev/transl8/blob/main/LICENSE).
