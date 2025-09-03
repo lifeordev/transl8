@@ -1,9 +1,17 @@
-# Change Log
+# Changelog
 
 All notable changes to the "transl8" extension will be documented in this file.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+---
 
-## [Unreleased]
+## [1.1.0] - 2025-09-04
+
+### Added
+- **Live Diagnostics:** Implemented real-time checking for missing translation keys.
+- **Problem Reporting:** Missing keys are now automatically underlined and added to the VS Code "Problems" panel for easy tracking and review. ✅
+
+---
+
+## [1.0.0]
 
 - Initial release
