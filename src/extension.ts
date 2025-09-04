@@ -3,19 +3,18 @@ import { registerEditTranslationCommand } from "./transl8/commands";
 import { registerHoverProvider } from "./transl8/hoverProvider";
 import { registerCompletionProvider } from "./transl8/completionProvider";
 import { updateDiagnostics, diagnosticCollection } from "./transl8/diagnostics";
+import { Transl8QuickFixProvider } from "./transl8/quickFixProvider";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("Transl8 extension is now active!");
 
-  // Register all features. They are now self-sufficient and will get
-  // configuration based on the active document.
   const editCommand = registerEditTranslationCommand();
   const hoverProvider = registerHoverProvider();
   const completionProvider = registerCompletionProvider();
 
-  // Add all disposables to the extension's subscriptions.
   context.subscriptions.push(editCommand, hoverProvider, completionProvider);
 
+  // **********************************
   // Error Diagnostics
   let debounceTimer: NodeJS.Timeout;
 
@@ -49,6 +48,21 @@ export function activate(context: vscode.ExtensionContext) {
       diagnosticCollection.delete(doc.uri);
     })
   );
+
+  // **********************************
+  // QuickFix
+  for (const lang of ["javascript", "typescript", "vue"]) {
+    context.subscriptions.push(
+      vscode.languages.registerCodeActionsProvider(
+        { scheme: "file", language: lang },
+        new Transl8QuickFixProvider(),
+        {
+          providedCodeActionKinds:
+            Transl8QuickFixProvider.providedCodeActionKinds,
+        }
+      )
+    );
+  }
 }
 
 export function deactivate() {}
