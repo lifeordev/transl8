@@ -2,7 +2,7 @@
   "name": "transl8",
   "displayName": "Transl8",
   "description": "Manage translations directly within your code editor.",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "engines": {
     "vscode": "^1.103.0"
   },
