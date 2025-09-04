@@ -7,22 +7,50 @@ import { loadTranslations } from "./translationManager";
 export function registerEditTranslationCommand(): vscode.Disposable {
   return vscode.commands.registerCommand(
     "lifeordev.transl8.editTranslation",
-    // The command now receives the key and the URI of the document it was triggered from.
-    async (key: string, resourceUriString: string) => {
-      const resourceUri = vscode.Uri.parse(resourceUriString);
-      const config = getConfigForUri(resourceUri);
+    async (key?: string, resourceUriString?: string) => {
+      let resourceUri: vscode.Uri | undefined;
 
+      if (resourceUriString) {
+        resourceUri = vscode.Uri.parse(resourceUriString);
+      } else if (vscode.window.activeTextEditor) {
+        resourceUri = vscode.window.activeTextEditor.document.uri;
+      }
+
+      if (!resourceUri) {
+        vscode.window.showErrorMessage(
+          "Transl8: Could not determine the file context. Please open a file."
+        );
+        return;
+      }
+
+      const config = getConfigForUri(resourceUri);
       if (!config || !config.absoluteTranslationPath) {
         vscode.window.showErrorMessage(
           "Transl8: Could not find configuration for the active file."
         );
         return;
       }
+
+      // 2. DETERMINE THE TRANSLATION KEY
+      // If a key wasn't passed in (e.g., from the Command Palette), prompt the user for it.
+      if (!key) {
+        key = await vscode.window.showInputBox({
+          prompt: "Enter the translation key to edit or create",
+          placeHolder: "example.key.here",
+        });
+      }
+
+      // If the user didn't provide a key (e.g., they pressed Escape), stop here.
+      if (!key) {
+        return;
+      }
+
+      // --- From this point on, the rest of your logic can proceed safely ---
       const absoluteTranslationPath = config.absoluteTranslationPath;
       const translations = loadTranslations(absoluteTranslationPath);
 
-      // (The rest of the logic is largely the same, but uses the resolved `absoluteTranslationPath`)
       for (const existingKey of translations.keys()) {
+        // Use the final, determined key
         if (existingKey !== key && existingKey.startsWith(key + ".")) {
           vscode.window.showWarningMessage(
             `Cannot edit "${key}" because a more specific key "${existingKey}" exists.`
@@ -38,6 +66,7 @@ export function registerEditTranslationCommand(): vscode.Disposable {
         placeHolder: "Enter the new translation",
       });
 
+      // ... (the rest of your function remains the same) ...
       if (newValue === undefined) {
         return;
       }
@@ -54,7 +83,6 @@ export function registerEditTranslationCommand(): vscode.Disposable {
 
       if (newValue !== currentValue[0] || newCtx !== currentValue[1]) {
         try {
-          // Ensure the file exists before trying to read it, create if not.
           let jsonObject = {};
           if (fs.existsSync(absoluteTranslationPath)) {
             const fileContents = fs.readFileSync(
