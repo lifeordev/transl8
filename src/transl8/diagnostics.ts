@@ -47,6 +47,7 @@ export function updateDiagnostics(document: vscode.TextDocument): void {
         vscode.DiagnosticSeverity.Error
       );
 
+      diagnostic.code = "no-translation";
       diagnostic.source = "Transl8";
       diagnostics.push(diagnostic);
     }

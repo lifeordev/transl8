@@ -30,6 +30,14 @@
         "title": "Transl8: Edit Translation"
       }
     ],
+    "menus": {
+    "commandPalette": [
+      {
+        "command": "lifeordev.transl8.editTranslation",
+        "when": "false" 
+      }
+    ]
+    },
     "configuration": {
       "title": "Transl8 Configuration",
       "properties": {
