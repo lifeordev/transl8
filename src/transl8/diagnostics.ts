@@ -25,7 +25,7 @@ export function updateDiagnostics(document: vscode.TextDocument): void {
     .map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
     .join("|");
   const keyRegex = new RegExp(
-    `(?:${functionNamesRegexPart})\\s*\\(\\s*['"]([^'"]+)['"]\\s*[,)]`,
+    `(?<!\\w)(?:${functionNamesRegexPart})\\b\\s*\\(\\s*['"]([^'"]+)['"]\\s*[,)]`,
     "g"
   );
 
