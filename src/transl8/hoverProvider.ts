@@ -20,7 +20,7 @@ export function registerHoverProvider(): vscode.Disposable {
           .map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
           .join("|");
         const keyRegex = new RegExp(
-          `(?:${functionNamesRegexPart})\\s*\\(\\s*['"]([^'"]+)['"]\\s*\\)`,
+          `(?:${functionNamesRegexPart})\\s*\\(\\s*['"]([^'"]+)['"]\\s*[,)]`,
           "g"
         );
 
